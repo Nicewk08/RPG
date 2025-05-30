@@ -72,10 +72,10 @@ public class PlayerScript : MonoBehaviour
                 animator.SetBool("IsJumping", false);
                 animator.SetBool("IsFalling", false);
             } else {
-                if (rb.velocity.y > 0.01f) {
+                if (rb.linearVelocity.y > 0.01f) {
                     animator.SetBool("IsJumping", true);
                     animator.SetBool("IsFalling", false);
-                } else if (rb.velocity.y < -0.01f) {
+                } else if (rb.linearVelocity.y < -0.01f) {
                     animator.SetBool("IsJumping", false);
                     animator.SetBool("IsFalling", true);
                 } else {
@@ -121,7 +121,7 @@ public class PlayerScript : MonoBehaviour
         }
 
         // Apply horizontal movement
-        rb.velocity = new Vector2(movement.x * moveSpeed, rb.velocity.y);
+        rb.linearVelocity = new Vector2(movement.x * moveSpeed, rb.linearVelocity.y);
     }
 
     void PerformAttack()
