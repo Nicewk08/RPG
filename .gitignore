@@ -1,0 +1,41 @@
+# Unity Generated
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+Assets/AssetStoreTools*
+sysinfo.txt
+Logs/
+MemoryCaptures/
+
+# Visual Studio & IDE related
+.vs/
+.vscode/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+.DS_Store # macOS specific
+Thumbs.db # Windows specific
+
+# Rider
+.idea/
+*.iml
+
+# Others
+*.meta.orig
+*.orig
+*.rej
+*.bak
+*.backup
+*.unitypackage
+.npm/
+.env
