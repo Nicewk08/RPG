@@ -81,7 +81,7 @@ public class PlayerScript : MonoBehaviour
                 } else {
                     if (!animator.GetBool("IsJumping"))
                     {
-                         animator.SetBool("IsFalling", true);
+                        animator.SetBool("IsFalling", true);
                     }
                 }
             }
@@ -97,14 +97,14 @@ public class PlayerScript : MonoBehaviour
             {
                 spriteRenderer.flipX = false;
                 if (attackPoint != null) {
-                     attackPoint.localPosition = new Vector3(Mathf.Abs(attackPointInitialX), attackPoint.localPosition.y, attackPoint.localPosition.z);
+                    attackPoint.localPosition = new Vector3(Mathf.Abs(attackPointInitialX), attackPoint.localPosition.y, attackPoint.localPosition.z);
                 }
             }
             else if (flip)
             {
                 spriteRenderer.flipX = true;
-                 if (attackPoint != null) {
-                     attackPoint.localPosition = new Vector3(-Mathf.Abs(attackPointInitialX), attackPoint.localPosition.y, attackPoint.localPosition.z);
+                if (attackPoint != null) {
+                    attackPoint.localPosition = new Vector3(-Mathf.Abs(attackPointInitialX), attackPoint.localPosition.y, attackPoint.localPosition.z);
                 }
             }
         }
@@ -116,7 +116,9 @@ public class PlayerScript : MonoBehaviour
         if (groundCheck != null)
         {
             isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
-        } else {
+        }
+        else
+        {
             isGrounded = false;
         }
 
@@ -144,12 +146,8 @@ public class PlayerScript : MonoBehaviour
             if (enemy != null)
             {
                 enemy.TakeDamage(attackDamage);
-            } else {
-                // It's common to hit other colliders on the enemy layer that aren't the main enemy script
-                // e.g. if the enemy has multiple colliders for different body parts.
-                // So, a warning might be too noisy here unless specifically debugging.
-                // Consider if a Debug.Log for successful hit on EnemyScript is more useful.
             }
+            // No warning for non-enemy colliders to avoid log spam
         }
     }
 }
