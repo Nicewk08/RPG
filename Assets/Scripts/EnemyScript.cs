@@ -2,21 +2,18 @@ using UnityEngine;
 
 public class EnemyScript : MonoBehaviour
 {
-    public int maxHealth = 3;
-    private int currentHealth;
-    public GameObject deathEffect; // Optional: Assign a particle effect or similar prefab in the Inspector
+    public int maxHp = 3;
+    private int currentHp;
 
     void Start()
     {
-        currentHealth = maxHealth;
+        currentHp = maxHp;
     }
 
     public void TakeDamage(int damage)
     {
-        currentHealth -= damage;
-        Debug.Log(gameObject.name + " took " + damage + " damage. Current health: " + currentHealth);
-
-        if (currentHealth <= 0)
+        currentHp -= damage;
+        if (currentHp <= 0)
         {
             Die();
         }
@@ -24,15 +21,7 @@ public class EnemyScript : MonoBehaviour
 
     void Die()
     {
-        Debug.Log(gameObject.name + " died!");
-
-        // Instantiate death effect if assigned
-        if (deathEffect != null)
-        {
-            Instantiate(deathEffect, transform.position, Quaternion.identity);
-        }
-
-        // Destroy the enemy GameObject
+        // 적 죽는 연출, 파괴 등
         Destroy(gameObject);
     }
 }

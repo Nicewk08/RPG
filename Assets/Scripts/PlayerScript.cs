@@ -2,111 +2,82 @@ using UnityEngine;
 
 public class PlayerScript : MonoBehaviour
 {
-    public float moveSpeed;
-    private Rigidbody2D rb;
-    private Vector2 movement;
-
-    // Jump related variables
+    public float moveSpeed = 5f;
     public float jumpForce = 10f;
-    public Transform groundCheck;
-    public LayerMask groundLayer;
-    private bool isGrounded;
-    public float groundCheckRadius = 0.1f;
-
-    // Attack related variables
+    public float dashForce = 15f;
+    public float dashDuration = 0.2f;
     public Transform attackPoint;
     public float attackRange = 0.5f;
     public LayerMask enemyLayers;
     public int attackDamage = 1;
-    public float attackRate = 2f;
-    private float nextAttackTime = 0f;
-    private float attackPointInitialX; // For flipping attack point
-
     public Animator animator;
-    private SpriteRenderer spriteRenderer;
+
+    private Rigidbody2D rb;
+    private bool isGrounded;
+    public Transform groundCheck;
+    public LayerMask groundLayer;
+    public float groundCheckRadius = 0.1f;
+
+    private bool isDashing = false;
+    private float dashTime = 0f;
+    private float moveInput = 0f;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        animator = GetComponent<Animator>();
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        if (attackPoint != null)
-        {
-            attackPointInitialX = attackPoint.localPosition.x; // Store initial X for flipping
-        }
+        if (animator == null) animator = GetComponent<Animator>();
     }
 
     void Update()
     {
-        // Horizontal Input
-        movement.x = Input.GetAxisRaw("Horizontal");
+        // 방향키로 이동 입력 받기
+        moveInput = Input.GetKey(KeyCode.LeftArrow) ? -1f : (Input.GetKey(KeyCode.RightArrow) ? 1f : 0f);
 
-        // Jump Input
-        if (Input.GetButtonDown("Jump") && isGrounded)
+        // 점프
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded && !isDashing)
         {
-            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
             if (animator != null)
             {
                 animator.SetBool("IsJumping", true);
-                animator.SetBool("IsFalling", false);
             }
         }
 
-        // Attack Input
-        if (Input.GetButtonDown("Fire1"))
+        // 대쉬 (Shift)
+        if (Input.GetKeyDown(KeyCode.LeftShift) && !isDashing && moveInput != 0)
         {
-            if (Time.time >= nextAttackTime)
+            isDashing = true;
+            dashTime = dashDuration;
+            rb.linearVelocity = new Vector2(moveInput * dashForce, rb.linearVelocity.y);
+            if (animator != null)
             {
-                PerformAttack();
-                nextAttackTime = Time.time + 1f / attackRate;
+                animator.SetTrigger("Dash");
             }
         }
 
-        // Animator parameters for jump/fall
+        // 공격 (D)
+        if (Input.GetKeyDown(KeyCode.D) && !isDashing)
+        {
+            Attack();
+        }
+
+        // 스킬 1 (A)
+        if (Input.GetKeyDown(KeyCode.A) && !isDashing)
+        {
+            UseSkill1();
+        }
+
+        // 스킬 2 (S)
+        if (Input.GetKeyDown(KeyCode.S) && !isDashing)
+        {
+            UseSkill2();
+        }
+
+        // 애니메이터 이동값 업데이트
         if (animator != null)
         {
-            animator.SetFloat("MoveX", movement.x);
-            animator.SetBool("IsMoving", Mathf.Abs(movement.x) > 0.01f);
-
-            if (isGrounded) {
-                animator.SetBool("IsJumping", false);
-                animator.SetBool("IsFalling", false);
-            } else {
-                if (rb.linearVelocity.y > 0.01f) {
-                    animator.SetBool("IsJumping", true);
-                    animator.SetBool("IsFalling", false);
-                } else if (rb.linearVelocity.y < -0.01f) {
-                    animator.SetBool("IsJumping", false);
-                    animator.SetBool("IsFalling", true);
-                } else {
-                    if (!animator.GetBool("IsJumping"))
-                    {
-                        animator.SetBool("IsFalling", true);
-                    }
-                }
-            }
-        }
-
-        // Sprite flipping and AttackPoint adjustment
-        if (spriteRenderer != null)
-        {
-            bool flip = movement.x < -0.01f;
-            bool unflip = movement.x > 0.01f;
-
-            if (unflip)
-            {
-                spriteRenderer.flipX = false;
-                if (attackPoint != null) {
-                    attackPoint.localPosition = new Vector3(Mathf.Abs(attackPointInitialX), attackPoint.localPosition.y, attackPoint.localPosition.z);
-                }
-            }
-            else if (flip)
-            {
-                spriteRenderer.flipX = true;
-                if (attackPoint != null) {
-                    attackPoint.localPosition = new Vector3(-Mathf.Abs(attackPointInitialX), attackPoint.localPosition.y, attackPoint.localPosition.z);
-                }
-            }
+            animator.SetFloat("MoveX", moveInput);
+            animator.SetBool("IsMoving", Mathf.Abs(moveInput) > 0.01f && isGrounded);
         }
     }
 
@@ -114,40 +85,57 @@ public class PlayerScript : MonoBehaviour
     {
         // Ground Check
         if (groundCheck != null)
-        {
             isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+        else
+            isGrounded = false;
+
+        // 대쉬 중엔 이동 입력 무시
+        if (!isDashing)
+        {
+            rb.linearVelocity = new Vector2(moveInput * moveSpeed, rb.linearVelocity.y);
         }
         else
         {
-            isGrounded = false;
+            dashTime -= Time.fixedDeltaTime;
+            if (dashTime <= 0f)
+            {
+                isDashing = false;
+            }
         }
-
-        // Apply horizontal movement
-        rb.linearVelocity = new Vector2(movement.x * moveSpeed, rb.linearVelocity.y);
     }
 
-    void PerformAttack()
+    void Attack()
     {
         if (animator != null)
-        {
-            animator.SetTrigger("AttackTrigger");
-        }
-
-        if (attackPoint == null) {
-            Debug.LogError("AttackPoint not assigned on PlayerScript!");
-            return;
-        }
-
+            animator.SetTrigger("Attack");
+        if (attackPoint == null) return;
         Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayers);
-
-        foreach(Collider2D enemyCollider in hitEnemies)
+        foreach (Collider2D enemy in hitEnemies)
         {
-            EnemyScript enemy = enemyCollider.GetComponent<EnemyScript>();
-            if (enemy != null)
-            {
-                enemy.TakeDamage(attackDamage);
-            }
-            // No warning for non-enemy colliders to avoid log spam
+            var enemyScript = enemy.GetComponent<EnemyScript>();
+            if (enemyScript != null)
+                enemyScript.TakeDamage(attackDamage);
         }
+    }
+
+    void UseSkill1()
+    {
+        if (animator != null)
+            animator.SetTrigger("Skill1");
+        // TODO: 스킬1 효과 구현
+    }
+
+    void UseSkill2()
+    {
+        if (animator != null)
+            animator.SetTrigger("Skill2");
+        // TODO: 스킬2 효과 구현
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        if (attackPoint == null) return;
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(attackPoint.position, attackRange);
     }
 }
